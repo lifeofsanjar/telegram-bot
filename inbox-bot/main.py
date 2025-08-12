@@ -1,5 +1,4 @@
 import os
-import requests
 from datetime import datetime
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
@@ -8,22 +7,18 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "8354684447:AAGjT-x5jooGquGaSvCs3mTZkhnu3nW7R
 ADMIN_ID = 1922538466
 message_user_map = {}
 
-# Reset webhook to prevent old connection issues
-def reset_webhook():
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook?drop_pending_updates=true"
-    r = requests.get(url)
-    print(f"🔄 Webhook reset: {r.json()}")
-
+# /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id == ADMIN_ID:
         await update.message.reply_text("👤 Admin panelga xush kelibsiz.")
     else:
         await update.message.reply_text("🤖 Assalomu aleykum! Botga xush kelibsiz! Murojatlaringizni yuboring.")
 
+# Handle text messages
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
 
-    # If admin replying to forwarded message
+    # Admin reply
     if user.id == ADMIN_ID and update.message.reply_to_message:
         original_msg_id = update.message.reply_to_message.message_id
         if original_msg_id in message_user_map:
@@ -34,7 +29,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("👤 Iltimos, foydalanuvchi xabariga reply qiling.")
         return
 
-    # If normal user
+    # Normal user
     if user.id != ADMIN_ID:
         await update.message.reply_text("🤖 Yaqin orada javob qaytaramiz!!!")
 
@@ -48,19 +43,10 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("👤 Admin xabaringiz qabul qilindi.")
 
 if __name__ == "__main__":
-    reset_webhook()
-
     app = ApplicationBuilder().token(BOT_TOKEN).build()
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
-    PORT = int(os.environ.get("PORT", 8443))
-    WEBHOOK_URL = f"https://{os.environ.get('RENDER_EXTERNAL_URL', '').replace('https://', '')}/webhook"
-
-    print(f"🚀 Starting bot with webhook at {WEBHOOK_URL}")
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        url_path=BOT_TOKEN,
-        webhook_url=f"{WEBHOOK_URL}/{BOT_TOKEN}"
-    )
+    print("🚀 Bot polling mode started...")
+    app.run_polling()
