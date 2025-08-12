@@ -4,25 +4,35 @@ from datetime import datetime
 
 BOT_TOKEN = "8354684447:AAGjT-x5jooGquGaSvCs3mTZkhnu3nW7RUA"
 
+# Replace with your own Telegram numeric user ID (not username)
+ADMIN_ID = 1922538466  # theshadowmonarch1
+
 # /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Assalomu aleykum! Botga xush kelibsiz! Murojatlaringizni yuboring.")
+    if update.message.from_user.id == ADMIN_ID:
+        await update.message.reply_text("✅ Admin panelga xush kelibsiz.")
+    else:
+        await update.message.reply_text(
+            "Assalomu aleykum! Botga xush kelibsiz! Murojatlaringizni yuboring."
+        )
 
-# Handle any text message
+# Handle user messages
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.from_user
-    username = f"@{user.username}" if user.username else user.full_name
-    text = update.message.text
-    time_sent = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Custom log message
-    log_message = f"{username} : {text} : {time_sent}"
+    if user.id != ADMIN_ID:
+        # Reply to user
+        await update.message.reply_text("Yaqin orada javob qaytaramiz!!!")
 
-    # Send this custom log back to the chat (the bot itself)
-    await update.message.reply_text(log_message)
+        # Send log to admin
+        username = f"@{user.username}" if user.username else user.full_name
+        time_sent = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        log_message = f"{username} : {update.message.text} : {time_sent}"
 
-    # Also send the default reply "123"
-    await update.message.reply_text("Yaqin orada javob qaytaramiz!!!")
+        await context.bot.send_message(chat_id=ADMIN_ID, text=log_message)
+    else:
+        # Admin sends a message — you can add admin commands here if needed
+        await update.message.reply_text("📩 Admin xabaringiz qabul qilindi.")
 
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 
